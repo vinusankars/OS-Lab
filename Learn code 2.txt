@@ -1,0 +1,111 @@
+$ stat file // for file/folder details like inode.
+$ chmod +rwx or -rwx // change mode of file
+
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <dirent.h>
+
+pread(int inode, void *buf, off_t offset, size_t nbyte);
+pwrite(int inode, void *buf, off_t offset, size_t nbyte);
+
+$ mkdir // new dir
+$ readdir // read/parse directory entries
+$ strace // inside of file, analyzing
+
+int fd1 = open("file.txt"); //returns 3
+read(fd1, buf, 12);
+int fd2 = open("file.txt"); //returns 4
+int fd3 = dup(fd2);         //returns 5
+lseek(fd1, 20, SEEK_SET);   // goes to offset 12+20=32
+lseek(fd1, 30, SEEK_CUR);   // goes to offset 20+30=50
+close(fd1);
+
+open("foo", O_RDONLY | O_LARGEFILE);
+fsync(int fd); // Forces buffer to flush to disk
+rename(char *old, char *new); // Deletes old link and adds new
+
+unlink(); // paths are deleted
+link(old pathname, new one) // link a new file name to an old one
+
+############
+struct dirent{
+char d_name[256]; // filename
+ino_t d_ino; // inode number
+off_t d_off; // offset to next direct
+unsigned short d_reclen; // len of record
+unsigned char d_type; // type of file
+}
+
+############ List files in a directory
+#include <stdio.h> 
+#include <dirent.h> 
+  
+int main(void) 
+{ 
+    struct dirent *de;  // Pointer for directory entry 
+  
+    // opendir() returns a pointer of DIR type.  
+    DIR *dr = opendir("."); 
+  
+    if (dr == NULL)  // opendir returns NULL if couldn't open directory 
+    { 
+        printf("Could not open current directory" ); 
+        return 0; 
+    } 
+  
+    // Refer http://pubs.opengroup.org/onlinepubs/7990989775/xsh/readdir.html 
+    // for readdir() 
+    while ((de = readdir(dr)) != NULL) 
+            printf("%s\n", de->d_name); 
+  
+    closedir(dr);     
+    return 0; 
+} 
+
+
+$ mkdir test
+$ touch test/1.txt // creates text
+$ strace rm -rf test
+$ ls -l // gives file permisiion details too
+
+fsync(int fd);
+
+############ Using stat() to display file details
+#include <unistd.h>
+#include <stdio.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+ 
+int main(int argc, char **argv)
+{
+    if(argc != 2)    
+        return 1;
+ 
+    struct stat fileStat;
+    if(stat(argv[1],&fileStat) < 0)    
+        return 1;
+ 
+    printf("Information for %s\n",argv[1]);
+    printf("---------------------------\n");
+    printf("File Size: \t\t%d bytes\n",fileStat.st_size);
+    printf("Number of Links: \t%d\n",fileStat.st_nlink);
+    printf("File inode: \t\t%d\n",fileStat.st_ino);
+ 
+    printf("File Permissions: \t");
+    printf( (S_ISDIR(fileStat.st_mode)) ? "d" : "-");
+    printf( (fileStat.st_mode & S_IRUSR) ? "r" : "-");
+    printf( (fileStat.st_mode & S_IWUSR) ? "w" : "-");
+    printf( (fileStat.st_mode & S_IXUSR) ? "x" : "-");
+    printf( (fileStat.st_mode & S_IRGRP) ? "r" : "-");
+    printf( (fileStat.st_mode & S_IWGRP) ? "w" : "-");
+    printf( (fileStat.st_mode & S_IXGRP) ? "x" : "-");
+    printf( (fileStat.st_mode & S_IROTH) ? "r" : "-");
+    printf( (fileStat.st_mode & S_IWOTH) ? "w" : "-");
+    printf( (fileStat.st_mode & S_IXOTH) ? "x" : "-");
+    printf("\n\n");
+ 
+    printf("The file %s a symbolic link\n", (S_ISLNK(fileStat.st_mode)) ? "is" : "is not");
+ 
+    return 0;
+}

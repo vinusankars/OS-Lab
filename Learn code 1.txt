@@ -1,0 +1,131 @@
+#include<unistd.h> //for fork, execvp
+#include<time.h>
+#include<fcntl.h> //for open, read, write
+#include<sys/wait.h>
+#include<string.h>
+
+= Fork, execvp, wait
+	int rc = fork();
+	char *ch[] = {"/bin/ls", NULL}; #Pass executable like ./code
+	execvp(ch[0], ch);
+	wait(NULL);
+	int w = waitpid((int) getppid(), NULL, WNOHANG);
+
+= Pipe
+	int f[2];
+	pipe(f);
+	int rc = fork();
+	if(rc > 0)
+	{
+		close(f[0]);
+		write(f[1], "Hello", strlen("Hello")+1);
+		close(f[1]);
+	}
+	else
+	{
+		close(f[1]);
+		char *ch = malloc(sizeof(char)*100);
+		int size = read(f[0], ch, 100);
+		print("%s", ch);
+	}
+
+= File
+	int f = open("text.txt", O_WRONLY);
+	char *ch = "Hello"; OR char ch[100] = "Hello";
+	write(f, ch, strlen(ch));
+	close(f)
+	int f = open("text.txt", O_RDONLY);
+	char *ch = malloc(sizeof(char)*100);
+	int size = read(f, ch, 100);
+	printf("%s", ch);
+	fclose(stdout); #to close standard output
+
+= time
+	clock_t begin = clock();
+	double time = (double)((clock() - begin)/CLOCKS_PER_SEC);
+
+= Lock =====================================
+	#include <stdatomic.h>
+	_Atomic volatile long long int count = 0; #Global variable
+
+	pthread_mutex_t lock;
+	pthread_mutex_init(&lock,NULL)
+	pthread_mutex_lock(&lock);
+	count++; 
+	pthread_mutex_unlock(&lock);
+
+
+= Misc
+	int *p = malloc(sizeof(int)*10);
+	free(p);
+	atoi(str); atof(str);
+	int main(int argc, char* argv[])
+
+= Thread ====================================  
+#include<stdio.h>
+#include<pthread.h>
+#include<unistd.h>
+#include<sys/types.h>
+
+struct data
+{
+    char* a;
+    int b;
+};
+
+void* thread(void* arg)
+{
+    struct data *x = (struct data *)arg;
+    printf("%s %d\n", x->a, x->b);
+    return NULL;
+}
+
+
+int main(){
+pthread_t p;
+struct data x = {"Hello",20};
+pthread_create(&p, NULL, thread, (void*)(&x));
+pthread_join(p, NULL);
+return 0;
+}
+
+= Load-store
+#include <stdio.h>
+#include <pthread.h>
+
+volatile long long int count = 0;
+int lock = 0;
+
+void* worker(void* arg) {
+    for (int i =0;i<100000000; i++)
+    {
+    while(lock);
+    lock=1;
+    count++; 
+    lock = 0; 
+
+    }
+   
+}
+
+int main(int argc, char *argv[]) {
+    pthread_t p, q;
+    pthread_create(&p, NULL, worker, NULL);
+    pthread_create(&q, NULL, worker, NULL);
+    pthread_join(p, NULL);
+    pthread_join(q, NULL);
+    printf("Count is: %lld\n", count);
+    return 0;
+}
+
+= Inline assembly
+#include<stdio.h>
+
+int main(){
+
+	int x = 100;
+	asm("incl %0": "+r"(x));
+	asm("shll %0": "+r"(x));
+	printf("Value of 2*(x+1) is %d\n",x);
+
+}
